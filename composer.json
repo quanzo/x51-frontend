@@ -1,0 +1,29 @@
+{
+    "name": "quanzo/x51-frontend",
+    "description": "Compile scss. Packed js and css ",
+	"version": "1.0.0",
+    "authors": [
+        {
+            "name": "Quanzo",
+            "email": "iquanzo@gmail.com"
+        }
+    ],
+    "keywords": [
+        "yii2",
+        "recaptcha"
+    ],
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": ">=7.0",
+		"quanzo/x51-functions": "*",
+        "tedivm/jshrink": "*",
+		"scssphp/scssphp": "*",
+		"tholu/php-packer": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "x51\\classes\\frontend\\": "src//"
+        }
+    }
+}
