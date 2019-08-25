@@ -1,5 +1,14 @@
 <?php
+/*
+	function ($arg) {
+		$arg - array of argument
+		$arg[0] - first
+		$arg[1] - second and etc
+		$arg[0][0] - type
+		$arg[0][1] - value
+	}
 
+*/
 return array(
 	'number'=>function ($arg) {
 		/*foreach ($arg as $key => $val)
@@ -22,6 +31,9 @@ return array(
 		} else $fp='';
 		if (defined('FRONTEND_PATH')) return FRONTEND_PATH.$fp;
 		return '/'.$fp;
+	},
+	'sum' => function ($arg) {
+		
 	}
 );
 

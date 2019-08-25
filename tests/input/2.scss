@@ -1,0 +1,11 @@
+$blue: #00f;
+
+p{
+	&.blue{
+		color: $blue;
+	}
+	&.white{
+		color: $white;
+		background-color: $black;
+	}
+}
