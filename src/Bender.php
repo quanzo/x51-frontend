@@ -4,7 +4,7 @@ namespace x51\classes\frontend;
 use \JShrink\Minifier;
 use \ScssPhp\ScssPhp\Compiler;
 use \Tholu\Packer\Packer;
-use \x51\functions\funcArray;
+use \x51\functions\funcFileSystem;
 
 /**
 Список CSS складываем в глобальный массив $_stylesheets
@@ -156,7 +156,7 @@ class Bender
             if ($fext == 'js') {
                 $packed = $this->getMinifyJS($content) . ";\n";
             }
-            fwrite($handler, '/*'.$arFiles[$idx].'*/'.$packed);
+            fwrite($handler, '/*#' . $arFiles[$idx] . '#*/' . $packed);
         }
         fclose($handler);
     } // end createPacked
@@ -202,6 +202,84 @@ class Bender
             return '<link href="' . $this->get_src($output) . '" rel="stylesheet" type="text/css"/>';
         }
     } // end lazzy
+
+    /**
+     * Составляет и возвращает статистику по использованию файлов в сжатых версиях
+     * Просматривает файлы в текущем каталоге и подкаталогах. Ищет метки файлов.
+     * Результат в виде массива. Ключ - имя файла. Значение - целое число до 100 (прецентов)
+     * На входе - папка с сжатыми файлами.
+     *
+     * @param string $dirFullPath
+     * @return void
+     */
+    public function getCacheStat($dirFullPath, array &$stat)
+    {
+        $arDirList = funcFileSystem::scandir($dirFullPath, [
+            'return_fullPath' => true,
+            'show' => [
+                'dir' => true,
+                'file' => true,
+            ],
+            'return_full' => true,
+            'func_check' => function ($arLine) {
+                if ($arLine['dir']) {
+                    return true;
+                } else {
+                    $ext = funcFileSystem::getFileExt($arLine['name']);
+                    return $ext == 'css' || $ext == 'js';
+                }
+            },
+        ]);
+        foreach ($arDirList as $arFile) {
+            if ($arFile['dir']) { // директория
+                $this->getCacheStat($arFile['name'], $stat);
+            } else { // ищем метки в файле
+                foreach ($this->getFilenameFromPacked($arFile['name']) as $fn) {
+                    if (!isset($stat[$fn])) {
+                        $stat[$fn] = 0;
+                    }
+                    $stat[$fn]++;
+                    if (!isset($stat['total'])) {
+                        $stat['total'] = 0;
+                    }
+                    $stat['total']++;
+                }
+            }
+        }
+    } // end getCacheStat
+
+    public function getFilenameFromPacked($packedFileName)
+    {
+        $i = 0;
+        $f = fopen($packedFileName, 'r');
+        try {
+            $buff = '';
+            
+            while ($line = fread($f, 256)) { // читаем файл по 256 символов
+                $buff .= $line; // заносим новые данные в буфер к остаткам предыдущих данных
+                
+                $len = strlen($buff);
+                $pos = 0;
+                do {
+                    $posBegin = strpos($buff, '/*#', $pos); // определяем начало и конец блока с именем файла
+                    $posEnd = strpos($buff, '#*/', $pos);
+                    if ($posBegin !== false && $posEnd === false) { // начало, конца нет - в буфер данные для следующей итерации
+                        $buff = substr($buff, $posBegin);
+                        $theend = true;
+                    } elseif ($posBegin === false && $posEnd === false) { // нет строки с именем файла
+                        $buff = substr($buff, $len - 3);
+                        $theend = true;
+                    } else { // есть имя
+                        $pos = $posEnd + 3;
+                        yield trim(substr($buff, $posBegin + 3, $posEnd - $posBegin - 3));
+                        $theend = false; // проверяем текст далее
+                    }
+                } while (!$theend);
+            }
+        } finally {
+            fclose($f);            
+        }
+    }
 
     protected function docRootDir()
     {
@@ -270,8 +348,6 @@ class Bender
         return $packed;
     } // end getMinifySCSS
 
-
-
     /** возвращает сжатое содержимое $str
      *
      * @param unknown $str
@@ -302,10 +378,12 @@ class Bender
     {
         $pathOutputFilename = $this->performFilename($outputFilename);
         if (file_exists($pathOutputFilename)) {
-            if ($this->ttl == -1) {
+            if ($this->ttl == -1) { // never recompile
                 return false;
             }
-            // never recompile
+            if ($this->ttl == 0) { // always recompile
+                return true;
+            }
             $fileage = time() - filemtime($pathOutputFilename);
             if ($fileage < $this->ttl) {
                 return false;
