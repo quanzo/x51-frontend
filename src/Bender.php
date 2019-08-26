@@ -14,7 +14,7 @@ use \x51\functions\funcArray;
 class Bender
 {
     // JS minifier, can be "packer" or "jshrink"
-    public $jsmin = "packer";
+    public $jsmin = "jshrink";
 
     // Packed file time to live in sec (-1 = never recompile, 0 = always recompile, default: 3600)
     public $ttl = 3600;
@@ -139,22 +139,24 @@ class Bender
     {
         $pathOutputFilename = $this->performFilename($outputFilename);
         $handler = fopen($pathOutputFilename, 'w+');
-        foreach ($arFiles as $fn) {
+        foreach ($arFiles as $idx => $fn) {
             if (!file_exists($fn)) {
                 $fn = $this->docRootDir() . $fn;
             }
-
+            $fext = $this->get_ext($fn);
             $content = file_get_contents($fn);
-            if ($ext == 'css' || $ext == 'scss') {
+            if ($fext == 'scss') {
                 // подмена url картинок
                 //$this->cssUrlCorrection
+                $packed = $this->getMinifySCSS($this->cssUrlCorrection($content, $fn));
+            }
+            if ($fext == 'css') {
                 $packed = $this->getMinifyCSS($this->cssUrlCorrection($content, $fn));
             }
-            if ($ext == 'js') {
-                $packed = $this->getMinifyJS($content) . "\r\n;\r\n";
-
+            if ($fext == 'js') {
+                $packed = $this->getMinifyJS($content) . ";\n";
             }
-            fwrite($handler, $packed);
+            fwrite($handler, '/*'.$arFiles[$idx].'*/'.$packed);
         }
         fclose($handler);
     } // end createPacked
@@ -230,12 +232,12 @@ class Bender
         }
     } // end performFilename
 
-    /** возвращает сжатое содержимое $str
+    /** возвращает сжатое содержимое $str как SCSS
      *
-     * @param unknown $str
-     * @return unknown
+     * @param string $str
+     * @return string
      */
-    protected function getMinifyCSS($str)
+    protected function getMinifySCSS($str)
     {
         if ($this->getSCSS()) {
             $packed = $this->getSCSS()->compile($str);
@@ -243,7 +245,32 @@ class Bender
             $packed = $str;
         }
         return $packed;
-    } // end getMinifyCSS
+    } // end getMinifySCSS
+
+    /** возвращает сжатое содержимое $str как CSS
+     *
+     * @param string $str
+     * @return string
+     */
+    protected function getMinifyCSS($str)
+    {
+        $packed = str_replace(["\n}", ";\n", "{\n", ",\n"], ['}', ';', '{', ','], preg_replace(
+            [
+                '/\/\*.*?\*\//si',
+                '/\s+\n/s',
+                '/\n\s+/s',
+            ],
+            [
+                '',
+                "\n",
+                "\n",
+            ],
+            $str
+        ));
+        return $packed;
+    } // end getMinifySCSS
+
+
 
     /** возвращает сжатое содержимое $str
      *
