@@ -59,17 +59,27 @@ class Bender
             $this->scss->setFormatter($this->formatter);
 
             if ($this->functionsConfig && file_exists($this->functionsConfig)) {
-                $arFunc = include $this->functionsConfig;
-                if ($arFunc) {
+                if (is_string($this->functionsConfig) && file_exists($this->functionsConfig)) {
+					$arFunc = include $this->functionsConfig;
+				} elseif (is_array($this->functionsConfig)) {
+					$arFunc = $this->functionsConfig;
+				}
+                if (!empty($arFunc)) {
                     foreach ($arFunc as $name => $func) {
                         $this->scss->registerFunction($name, $func);
                     }
                 }
             }
 
-            if ($this->variablesConfig && file_exists($this->variablesConfig)) {
-                $arVar = include $this->variablesConfig;
-                $this->scss->setVariables($arVar);
+            if ($this->variablesConfig) {
+				if (is_string($this->variablesConfig) && file_exists($this->variablesConfig)) {
+					$arVar = include $this->variablesConfig;
+				} elseif (is_array($this->variablesConfig)) {
+					$arVar = $this->variablesConfig;
+				}
+				if (!empty($arVar)) {
+					$this->scss->setVariables($arVar);
+				}
             }
         }
         return $this->scss;
