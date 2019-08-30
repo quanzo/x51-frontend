@@ -31,9 +31,6 @@ return array(
 		} else $fp='';
 		if (defined('FRONTEND_PATH')) return FRONTEND_PATH.$fp;
 		return '/'.$fp;
-	},
-	'sum' => function ($arg) {
-		
 	}
 );
 
