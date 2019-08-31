@@ -60,10 +60,10 @@ class Bender
 
             if ($this->functionsConfig && file_exists($this->functionsConfig)) {
                 if (is_string($this->functionsConfig) && file_exists($this->functionsConfig)) {
-					$arFunc = include $this->functionsConfig;
-				} elseif (is_array($this->functionsConfig)) {
-					$arFunc = $this->functionsConfig;
-				}
+                    $arFunc = include $this->functionsConfig;
+                } elseif (is_array($this->functionsConfig)) {
+                    $arFunc = $this->functionsConfig;
+                }
                 if (!empty($arFunc)) {
                     foreach ($arFunc as $name => $func) {
                         $this->scss->registerFunction($name, $func);
@@ -72,14 +72,14 @@ class Bender
             }
 
             if ($this->variablesConfig) {
-				if (is_string($this->variablesConfig) && file_exists($this->variablesConfig)) {
-					$arVar = include $this->variablesConfig;
-				} elseif (is_array($this->variablesConfig)) {
-					$arVar = $this->variablesConfig;
-				}
-				if (!empty($arVar)) {
-					$this->scss->setVariables($arVar);
-				}
+                if (is_string($this->variablesConfig) && file_exists($this->variablesConfig)) {
+                    $arVar = include $this->variablesConfig;
+                } elseif (is_array($this->variablesConfig)) {
+                    $arVar = $this->variablesConfig;
+                }
+                if (!empty($arVar)) {
+                    $this->scss->setVariables($arVar);
+                }
             }
         }
         return $this->scss;
@@ -205,8 +205,8 @@ class Bender
 
         if ($ext == 'js') {
             return '<script>$(document).ready(function () {
-				jsLoad("' . $this->get_src($output) . '");
-			});</script>';
+                jsLoad("' . $this->get_src($output) . '");
+            });</script>';
         }
         if ($ext == 'css' || $ext == 'scss') {
             return '<link href="' . $this->get_src($output) . '" rel="stylesheet" type="text/css"/>';
@@ -366,25 +366,25 @@ class Bender
     protected function getMinifyJS($str)
     {
         $size = strlen($str);
-		if ($size > 0) {
-			// определим факт минификации js
-			$countLine = substr_count($str, "\n") + 1;
-			if ($size/$countLine < 130) {
-				switch ($this->jsmin) {
-					case "packer":
-						$packer = new Packer($str, "Normal", true, false);
-						$packed = $packer->pack();
-						break;
-					case "jshrink":
-						$packed = Minifier::minify($str);
-						break;
-					default:
-						$packed = $str;
-				}
-				return $packed;
-			}
-		}
-		return $str;
+        if ($size > 0) {
+            // определим факт минификации js
+            $countLine = substr_count($str, "\n") + 1;
+            if ($size/$countLine < 130) {
+                switch ($this->jsmin) {
+                    case "packer":
+                        $packer = new Packer($str, "Normal", true, false);
+                        $packed = $packer->pack();
+                        break;
+                    case "jshrink":
+                        $packed = Minifier::minify($str);
+                        break;
+                    default:
+                        $packed = $str;
+                }
+                return $packed;
+            }
+        }
+        return $str;
     } // end getMinifyJS
 
     /** проверяет пакованный файл на актуальность
