@@ -365,18 +365,26 @@ class Bender
      */
     protected function getMinifyJS($str)
     {
-        switch ($this->jsmin) {
-            case "packer":
-                $packer = new Packer($str, "Normal", true, false);
-                $packed = $packer->pack();
-                break;
-            case "jshrink":
-                $packed = Minifier::minify($str);
-                break;
-            default:
-                $packed = $str;
-        }
-        return $packed;
+        $size = strlen($str);
+		if ($size > 0) {
+			// определим факт минификации js
+			$countLine = substr_count($str, "\n") + 1;
+			if ($size/$countLine < 130) {
+				switch ($this->jsmin) {
+					case "packer":
+						$packer = new Packer($str, "Normal", true, false);
+						$packed = $packer->pack();
+						break;
+					case "jshrink":
+						$packed = Minifier::minify($str);
+						break;
+					default:
+						$packed = $str;
+				}
+				return $packed;
+			}
+		}
+		return $str;
     } // end getMinifyJS
 
     /** проверяет пакованный файл на актуальность
